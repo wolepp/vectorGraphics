@@ -3,7 +3,7 @@ package vectorgraphics;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class Line implements Drawable {
+public class Line extends Shape {
 
     private double x1, y1, x2, y2;
 
@@ -25,6 +25,8 @@ public class Line implements Drawable {
 
     @Override
     public void draw(GraphicsContext gc) {
+        super.updateColor();
+        gc.setStroke(color);
         gc.strokeLine(x1, y1, x2, y2);
     }
 }

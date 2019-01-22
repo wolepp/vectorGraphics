@@ -9,12 +9,20 @@ import javafx.scene.control.Label;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
 public class Controller {
 
-    private ArrayList<Drawable> drawables;
+    private History history = new History();
+    private FileManager fileManager = new FileManager();
+
     private Color color;
     private double x1, y1, x2, y2;
     private Drawable currentDrawable;
@@ -105,9 +113,25 @@ public class Controller {
 
     @FXML
     private void mouseReleased(MouseEvent mouseEvent) {
+        rect(gc);
         gc.setFill(color);
+        gc.setStroke(color);
+        gc.setGlobalBlendMode(BlendMode.SRC_OVER);
         setDims(currentDrawable);
         draw(currentDrawable);
+    }
+
+    private void correctDims() {
+        if (x2 < x1) {
+            double temp = x1;
+            x1 = x2;
+            x2 = temp;
+        }
+        if (y2 < y1) {
+            double temp = y2;
+            y2 = y1;
+            y1 = temp;
+        }
     }
 
     private void setDims(Drawable drawable) {
@@ -117,11 +141,13 @@ public class Controller {
             ((Line) drawable).setX2(x2);
             ((Line) drawable).setY2(y2);
         } else if (drawable instanceof Rectangle) {
+            correctDims();
             ((Rectangle) drawable).setX(x1);
             ((Rectangle) drawable).setY(y1);
             ((Rectangle) drawable).setWidth(x2 - x1);
             ((Rectangle) drawable).setHeight(y2 - y1);
         } else if (drawable instanceof Oval) {
+            correctDims();
             ((Oval) drawable).setX(x1);
             ((Oval) drawable).setY(y1);
             ((Oval) drawable).setWidth(x2 - x1);
@@ -130,6 +156,67 @@ public class Controller {
     }
 
     private void draw(Drawable drawable) {
+        drawable.setColor(color);
+        history.add(drawable);
         drawable.draw(gc);
+    }
+
+    public void clear(ActionEvent actionEvent) {
+        history.clear();
+        clear(gc);
+    }
+
+    public void openFile(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Wybierz plik");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Plik graficzny", "*.pnvp")
+        );
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+"/pictures"));
+        File selectedFile = fileChooser.showOpenDialog(new Stage());
+
+        clear(actionEvent);
+        try {
+            history = fileManager.loadFrom(selectedFile);
+            drawHistory(history);
+            filePathLabel.setText(selectedFile.getAbsolutePath());
+        } catch (IOException e) {
+            System.out.println("Nie można odczytać pliku");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Niepoprawna zawartość pliku");
+        }
+    }
+
+    private void drawHistory(History history) {
+        for (Drawable d: history)
+            d.draw(gc);
+    }
+
+    public void newFile(ActionEvent actionEvent) {
+        history = new History();
+        clear(gc);
+    }
+
+    public void saveFile(ActionEvent actionEvent) {
+
+    }
+
+    public void saveFileAs(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Zapisz plik jako");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Plik graficzny", "pnvp")
+        );
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+"/pictures"));
+        fileChooser.setInitialFileName(".pnvp");
+        File file = fileChooser.showSaveDialog(new Stage());
+        if (file != null) {
+            fileManager.saveTo(file, history);
+        }
+    }
+
+    public void undo(ActionEvent actionEvent) {
+        history.undo();
+        drawHistory(history);
     }
 }

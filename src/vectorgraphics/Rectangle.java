@@ -3,7 +3,7 @@ package vectorgraphics;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class Rectangle implements Drawable {
+public class Rectangle extends Shape {
 
     private double x, y;
     private double width, height;
@@ -26,6 +26,9 @@ public class Rectangle implements Drawable {
 
     @Override
     public void draw(GraphicsContext gc) {
-        gc.strokeRect(x, y, width, height);
+        super.updateColor();
+        gc.setFill(color);
+        gc.setStroke(color);
+        gc.fillRect(x, y, width, height);
     }
 }

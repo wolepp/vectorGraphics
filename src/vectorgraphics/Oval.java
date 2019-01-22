@@ -3,7 +3,7 @@ package vectorgraphics;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class Oval implements Drawable {
+public class Oval extends Shape {
 
     private double x, y;
     private double width, height;
@@ -26,6 +26,9 @@ public class Oval implements Drawable {
 
     @Override
     public void draw(GraphicsContext gc) {
-        gc.strokeOval(x, y, width, height);
+        super.updateColor();
+        gc.setStroke(color);
+        gc.setFill(color);
+        gc.fillOval(x, y, width, height);
     }
 }
